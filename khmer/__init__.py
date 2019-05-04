@@ -67,7 +67,7 @@ from khmer._khmer import FILETYPES
 from khmer._oxli.graphs import (Counttable, QFCounttable, Nodetable,
                                 CyclicCounttable,
                                 SmallCounttable, Countgraph, SmallCountgraph,
-                                Nodegraph)
+                                Nodegraph, get_next_novel_read)
 from khmer._oxli.labeling import GraphLabels
 from khmer._oxli.legacy_partitioning import SubsetPartition, PrePartitionInfo
 from khmer._oxli.parsing import FastxParser

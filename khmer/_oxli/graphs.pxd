@@ -125,6 +125,16 @@ cdef extern from "oxli/hashtable.hh" namespace "oxli" nogil:
         CpQFCounttable(WordLength, uint64_t) except +oxli_raise_py_error
 
 
+    cdef struct NovelKmer:
+        unsigned ksize
+        unsigned offset
+        vector[BoundedCounterType] abunds
+
+    cdef int next_novel_read(CpSequence &, vector[NovelKmer] &a,
+                             FastxParserPtr &, CpCounttable &,
+                             vector[CpCounttable] &, unsigned, unsigned);
+
+
 cdef extern from "oxli/hashgraph.hh" namespace "oxli" nogil:
     cdef cppclass CpHashgraph "oxli::Hashgraph" (CpHashtable):
         set[HashIntoType] all_tags

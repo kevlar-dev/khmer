@@ -14,14 +14,14 @@ from khmer._oxli.utils cimport _bstring, is_str, is_num
 from khmer._oxli.utils import get_n_primes_near_x
 from khmer._oxli.parsing cimport (CpFastxReader, CPyReadParser_Object,
                                   get_parser, CpReadParser, FastxParser,
-                                  FastxParserPtr)
+                                  FastxParserPtr, CpSequence, Sequence)
 from khmer._oxli.hashset cimport HashSet
 from khmer._oxli.legacy_partitioning cimport (CpSubsetPartition, SubsetPartition,
                                    cp_pre_partition_info, PrePartitionInfo)
 from khmer._oxli.oxli_types cimport MAX_BIGCOUNT, HashIntoType
 from khmer._oxli.traversal cimport Traverser
 
-from khmer._khmer import ReadParser
+from khmer._khmer import ReadParser, Read
 
 CYTHON_TABLES = (Hashtable, Nodetable, Counttable, CyclicCounttable,
                  SmallCounttable,
@@ -898,3 +898,16 @@ cdef class Nodegraph(Hashgraph):
 
     def update(self, Nodegraph other):
         deref(self._ng_this).update_from(deref(other._ng_this))
+
+
+def get_next_novel_read(FastxParserPtr parser, Counttable casecounts,
+                        vector[Counttable] controlcounts, casemin=5, ctrlmax=1):
+    cdef CpSequence read
+    cdef vector[NovelKmer] annotations
+    # cdef CpCounttable &casecounts_cp = deref(casecounts._ct_this)
+    cdef vector[CpCounttable] ctrlcounts_cp
+    #cdef CpCounttable &ct_cp
+    for ct in controlcounts:
+        ctrlcounts_cp.push_back(deref(ct._ct_this))
+    while next_novel_read(read, annotations, parser, deref(casecounts._ct_this), ctrlcounts_cp, casemin, ctrlmax) == 1:
+        yield Sequence._wrap(read), annotations

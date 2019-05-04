@@ -199,3 +199,15 @@ def test_init_with_primes(sketchtype):
     primes = khmer.get_n_primes_near_x(4, random.randint(1000, 2000))
     sketch = sketchtype(31, 1, 1, primes=primes)
     assert sketch.hashsizes() == primes
+
+
+def test_get_novel_kmers():
+    case = Counttable(31, 1e4, 4)
+    controls = [Counttable(31, 1e4, 4) for _ in range(2)]
+    read = 'CAGGCGCCCACCACCGTGCCCTCCAACCTGATGGT'
+    for _ in range(10):
+        case.consume(read)
+    controls[1].consume(read)
+    parser = khmer.FastxParser(utils.get_test_data('100-reads.fq.gz')
+    novelreads = list(khmer.get_next_novel_read(parser, case, controls, casemin=5, ctrlmax=1))
+    assert False

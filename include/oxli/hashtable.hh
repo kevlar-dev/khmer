@@ -633,12 +633,12 @@ typedef struct
     std::vector<BoundedCounterType> abunds;
 } NovelKmer;
 
-void next_novel_read(oxli::read_parsers::Read &read,
-                     std::vector<NovelKmer> &annotations,
-                     read_parsers::ReadParserPtr<read_parsers::FastxReader> &parser,
-                     Counttable &casecounts,
-                     std::vector<Counttable> &controlcounts,
-                     unsigned casemin, unsigned ctrlmax);
+int next_novel_read(oxli::read_parsers::Read &read,
+                    std::vector<NovelKmer> &annotations,
+                    read_parsers::ReadParserPtr<read_parsers::FastxReader> &parser,
+                    Counttable &casecounts,
+                    std::vector<Counttable> &controlcounts,
+                    unsigned casemin, unsigned ctrlmax);
 
 }
 
