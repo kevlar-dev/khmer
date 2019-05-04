@@ -612,6 +612,61 @@ const
 }
 
 
+int next_novel_read(Read &read,
+                    std::vector<oxli::NovelKmer> &annotations,
+                    ReadParserPtr<FastxReader> &parser,
+                    oxli::Counttable &casecounts,
+                    std::vector<oxli::Counttable> &controlcounts,
+                    unsigned casemin, unsigned ctrlmax)
+{
+    Read bufferread;
+    while (!parser->is_complete()) {
+        try {
+            bufferread = parser->get_next_read();
+        } catch (NoMoreReadsAvailable) {
+            return 0;
+        }
+        if (bufferread.sequence.size() < casecounts.ksize()) {
+            return 0;
+        }
+        std::vector<BoundedCounterType> read_case_counts;
+        casecounts.get_kmer_counts(bufferread.sequence, read_case_counts);
+        std::vector< std::vector<BoundedCounterType> > read_control_counts;
+        for (unsigned i = 0; i < controlcounts.size(); i++) {
+            std::vector<BoundedCounterType> counts;
+            controlcounts[i].get_kmer_counts(bufferread.sequence, counts);
+            read_control_counts.push_back(counts);
+        }
+        for (unsigned offset = 0; offset < controlcounts.size(); offset++) {
+            BoundedCounterType casecnt = read_case_counts[offset];
+            bool keep = casecnt >= casemin;
+            if (!keep) {
+                continue;
+            }
+            std::vector<BoundedCounterType> ctrlcnts;
+            for (auto &counts: read_control_counts) {
+                BoundedCounterType ctrlcnt = counts[offset];
+                keep = ctrlcnt <= ctrlmax;
+                if (!keep) {
+                    break;
+                }
+                ctrlcnts.push_back(ctrlcnt);
+            }
+            if (keep) {
+                NovelKmer ikmer = {casecounts.ksize(), offset, ctrlcnts};
+                annotations.emplace_back(ikmer);
+            }
+        }
+        if (annotations.size() > 0) {
+            read = bufferread;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+
 template void Hashtable::consume_seqfile<FastxReader>(
     std::string const &filename,
     unsigned int &total_reads,
