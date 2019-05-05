@@ -616,7 +616,8 @@ int next_novel_read(Read &read,
                     std::vector<oxli::NovelKmer> &annotations,
                     ReadParserPtr<FastxReader> &parser,
                     oxli::Counttable &casecounts,
-                    std::vector<oxli::Counttable> &controlcounts,
+                    oxli::Counttable &ctrl1counts,
+                    oxli::Counttable &ctrl2counts,
                     unsigned casemin, unsigned ctrlmax)
 {
     Read bufferread;
@@ -631,31 +632,31 @@ int next_novel_read(Read &read,
         }
         std::vector<BoundedCounterType> read_case_counts;
         casecounts.get_kmer_counts(bufferread.sequence, read_case_counts);
+        std::vector<BoundedCounterType> read_ctrl1_counts;
+        ctrl1counts.get_kmer_counts(bufferread.sequence, read_ctrl1_counts);
+        std::vector<BoundedCounterType> read_ctrl2_counts;
+        ctrl2counts.get_kmer_counts(bufferread.sequence, read_ctrl2_counts);
         std::vector< std::vector<BoundedCounterType> > read_control_counts;
-        for (unsigned i = 0; i < controlcounts.size(); i++) {
-            std::vector<BoundedCounterType> counts;
-            controlcounts[i].get_kmer_counts(bufferread.sequence, counts);
-            read_control_counts.push_back(counts);
-        }
-        for (unsigned offset = 0; offset < controlcounts.size(); offset++) {
-            BoundedCounterType casecnt = read_case_counts[offset];
-            bool keep = casecnt >= casemin;
-            if (!keep) {
+
+        for (unsigned offset = 0; offset < read_case_counts.size(); offset++) {
+            std::vector<BoundedCounterType> abunds;
+            BoundedCounterType count = read_case_counts[offset];
+            abunds.push_back(count);
+            if (count < casemin) {
                 continue;
             }
-            std::vector<BoundedCounterType> ctrlcnts;
-            for (auto &counts: read_control_counts) {
-                BoundedCounterType ctrlcnt = counts[offset];
-                keep = ctrlcnt <= ctrlmax;
-                if (!keep) {
-                    break;
-                }
-                ctrlcnts.push_back(ctrlcnt);
+            count = read_ctrl1_counts[offset];
+            abunds.push_back(count);
+            if (count > ctrlmax) {
+                continue;
             }
-            if (keep) {
-                NovelKmer ikmer = {casecounts.ksize(), offset, ctrlcnts};
-                annotations.emplace_back(ikmer);
+            count = read_ctrl2_counts[offset];
+            abunds.push_back(count);
+            if (count > ctrlmax) {
+                continue;
             }
+            NovelKmer ikmer(casecounts.ksize(), offset, abunds);
+            annotations.emplace_back(ikmer);
         }
         if (annotations.size() > 0) {
             read = bufferread;

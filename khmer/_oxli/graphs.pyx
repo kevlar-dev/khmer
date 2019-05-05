@@ -900,14 +900,11 @@ cdef class Nodegraph(Hashgraph):
         deref(self._ng_this).update_from(deref(other._ng_this))
 
 
-def get_next_novel_read(FastxParserPtr parser, Counttable casecounts,
-                        vector[Counttable] controlcounts, casemin=5, ctrlmax=1):
+def get_next_novel_read(parser, Counttable casecounts,
+                        Counttable ctrl1counts, Counttable ctrl2counts,
+                        casemin=5, ctrlmax=1):
+    cdef FastxParserPtr p = casecounts._get_parser(parser)
     cdef CpSequence read
     cdef vector[NovelKmer] annotations
-    # cdef CpCounttable &casecounts_cp = deref(casecounts._ct_this)
-    cdef vector[CpCounttable] ctrlcounts_cp
-    #cdef CpCounttable &ct_cp
-    for ct in controlcounts:
-        ctrlcounts_cp.push_back(deref(ct._ct_this))
-    while next_novel_read(read, annotations, parser, deref(casecounts._ct_this), ctrlcounts_cp, casemin, ctrlmax) == 1:
+    while next_novel_read(read, annotations, p, deref(casecounts._ct_this), deref(ctrl1counts._ct_this), deref(ctrl2counts._ct_this), casemin, ctrlmax) == 1:
         yield Sequence._wrap(read), annotations

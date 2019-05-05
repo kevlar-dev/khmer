@@ -626,18 +626,23 @@ public:
         : MurmurHashtable(ksize, new BitStorage(sizes)) { } ;
 };
 
-typedef struct
+class NovelKmer
 {
+public:
     unsigned ksize;
     unsigned offset;
     std::vector<BoundedCounterType> abunds;
-} NovelKmer;
+
+    NovelKmer() : ksize(0), offset(0), abunds({0, 0, 0}) {}
+    NovelKmer(unsigned k, unsigned o, std::vector<BoundedCounterType> a) : ksize(k), offset(o), abunds(a) {}
+};
 
 int next_novel_read(oxli::read_parsers::Read &read,
                     std::vector<NovelKmer> &annotations,
                     read_parsers::ReadParserPtr<read_parsers::FastxReader> &parser,
                     Counttable &casecounts,
-                    std::vector<Counttable> &controlcounts,
+                    Counttable &ctrl1counts,
+                    Counttable &ctrl2counts,
                     unsigned casemin, unsigned ctrlmax);
 
 }
